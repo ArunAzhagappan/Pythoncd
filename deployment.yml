@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: newdoc  # Name of your deployment
+spec:
+  selector:
+    matchLabels:
+      run: newdoc  # This label matches your deployment with your service
+  replicas: 2  # Number of instances (pods) of your application
+  template:
+    metadata:
+      labels:
+        run: newdoc  # Label used to identify your pods
+    spec:
+      containers:
+        - name: newdoc  # Container name
+          image: arunazhagappan/nginx-image:latest  # Docker image used by the container
+          imagePullPolicy: Always  # Always pull the latest image
+          ports:
+            - containerPort: 80  # Expose port 80 on the container
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: newdoc  # Name of your service
+  labels:
+    run: newdoc  # Label to link with your deployment
+spec:
+  ports:
+    - port: 80  # Expose port 80 to the outside world
+      targetPort: 80  # Forward traffic to port 80 on the containers
+  selector:
+    run: newdoc  # Match with the deployment using this label
+  type: LoadBalancer  # Expose the service externally
