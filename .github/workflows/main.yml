@@ -1,4 +1,4 @@
-name: Deploy on Changes
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - '**/*'
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,13 +23,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t arunazhagappan/nginx-image:latest .
+          
+      - name: Push Docker image
+        run: |
+          docker push arunazhagappan/nginx-image:latest
+
       - name: Install kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl"
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
-      - name: Deploy NGINX
+      - name: Deploy to Kubernetes
         run: kubectl apply -f nginx-deployment.yaml
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
